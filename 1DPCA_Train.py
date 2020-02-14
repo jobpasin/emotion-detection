@@ -3,7 +3,7 @@
 #!/usr/bin/python
 import os, sys
 Original_Dir = os.getcwd()
-#sys.path.append('/home/pi/.virtualenvs/cv/lib/python2.7/site-packages') #####
+
 import timeit
 import cv2
 import numpy as np
@@ -76,7 +76,7 @@ def create_Eig(images,im_av,num_Eig): #Process of creating optimal projection ax
     [Size,num_pic] = images.shape # Number of training images
     if num_pic < num_Eig:
         num_Eig = num_pic
-        print "!!Eigenfaces is limited to number of training images"
+        print("!!Eigenfaces is limited to number of training images")
     #Create pseudo covariance matrix
     Cov = images.transpose()*images
 
@@ -111,7 +111,7 @@ def ReconIm(Eig,num_Eig,Mode):  #Return eigenface into image
         Eig_Im = np.reshape(Eig,(100,100))
         Eig_Im = np.array(Eig_Im, dtype = np.uint8)
     else:
-        print "Error mode : 'E' or 'Av'"
+        print("Error mode : 'E' or 'Av'")
     Eig_Im = cv2.resize(Eig_Im,(400,400)) 
     cv2.imshow("Eigenface Image: "+str(num_Eig),Eig_Im)
     
@@ -146,11 +146,11 @@ np.savez(PCA_Path,Eig0 = Eig[0],ImAv0 = Im_Av[0],Eig1 = Eig[1],ImAv1 = Im_Av[1] 
                                                            
 toc = timeit.default_timer()
 
-print "Total time spend for training is:", toc-tic, "seconds"
-print "Total images for training is", np.shape(train_images[0])[1], ",",np.shape(train_images[1])[1],",",\
-      np.shape(train_images[2])[1],",",np.shape(train_images[3])[1], "images (For each emotion)"
-print "Image size is", train_images[0][0].shape
-print "Number of optimal projection axis is:", num_Eig
+print ("Total time spend for training is:", toc-tic, "seconds")
+print ("Total images for training is", np.shape(train_images[0])[1], ",",np.shape(train_images[1])[1],",",\
+      np.shape(train_images[2])[1],",",np.shape(train_images[3])[1], "images (For each emotion)")
+print ("Image size is", train_images[0][0].shape)
+print ("Number of optimal projection axis is:", num_Eig)
 
 
 

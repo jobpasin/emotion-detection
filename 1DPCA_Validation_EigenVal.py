@@ -27,7 +27,7 @@ elif Path == 2:
     path_Test = './NitadDB/TestingA'     #Testing picture path
     Data_path = './Report/1D_Nitad_Valid_A_A.txt'        #Text data saving path ##########
 else:
-    print 'Path Error'
+    print ('Path Error')
 TrainWithGlass = 0                  #0 = No glasses, #1 = Glasses only, #2= All
 num_TrainPic = 14                   #Max number of training pic (start at 3)
 perc_Eig = [73.,60.,73.,67.]                       #Max number of Eig (start at 1)
@@ -65,7 +65,7 @@ def import_images(path,num_Pic,Use_testpic,path_Test,TrainWithGlass): #Process o
             image_paths[i] = [os.path.join(path, f) for f in os.listdir(path) \
                            if f.split("_")[0].endswith(emotion[i])]
         image_paths[i].sort()
-        #print image_paths[i]
+        #print(image_paths[i])
         # Find size of an image 
         image_pil = Image.open(image_paths[0][0]).convert('L')
         [H,W] = np.shape(np.array(image_pil,'float32'))   
@@ -75,19 +75,19 @@ def import_images(path,num_Pic,Use_testpic,path_Test,TrainWithGlass): #Process o
     random.shuffle(image_paths[0])
     img_index = image_paths[0][0:num_Pic]
     img_index.sort()
-    #print img_index
+    #print(img_index)
 
     index_name = [i.split('_',1)[1] for i in img_index]
 
     for i in range(0,4):
-        #print image_paths[i]
+        #print(image_paths[i])
         for index in img_index:
             #Read the selected images from folder ,convert to grayscale matrix
             image_path_temp = [f for f in image_paths[i] if f.split("_")[1].endswith(index.split("_")[1])]
             if image_path_temp == []:
-                print "Error finding data in path:" ,index, "from" ,image_paths[i]
+                print("Error finding data in path:" ,index, "from" ,image_paths[i])
             image_path = image_path_temp[0]
-            #print "Train:",image_path
+            #print("Train:",image_path)
             image_paths[i].remove(image_path)
             image_pil = Image.open(image_path).convert('L')
             image = np.matrix(np.array(image_pil,'float32'))
@@ -108,7 +108,7 @@ def import_images(path,num_Pic,Use_testpic,path_Test,TrainWithGlass): #Process o
                            if f.split("_")[0].endswith(emotion[i])]
         for image_path in image_paths[i]:
             # Read the image and convert to grayscale, convert to matrix
-            #print "Test:", image_path
+            #print("Test:", image_path)
             image_test_pil = Image.open(image_path).convert('L')
             image_test = np.matrix(np.array(image_test_pil,'float32'))
             image_test_vec_temp = np.reshape(image_test,H*W,'C').transpose()
@@ -141,7 +141,7 @@ def create_Eig(images,im_av,perc_Eig,num_Ignore): #Process of creating optimal p
         if np.sum(EgVal_percent[0:i]) > perc_Eig:
             break
         num_Eig = num_Eig+1
-    print "Num Eig:", num_Eig
+    print ("Num Eig:", num_Eig)
     print np.sum(EgVal_percent[0:num_Eig])
     #Select only num_Eig vectors and normalize to size of 1
     Eig = EgVec[:,num_Ignore]/np.linalg.norm(EgVec[:,num_Ignore])
@@ -169,14 +169,14 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
     #stoc = timeit.default_timer()
-    #print "Time for create PCA from training eigenface is", stoc-stic, "seconds"
+    #print ("Time for create PCA from training eigenface is", stoc-stic, "seconds")
     
     #OpenImage(Eig,PCA_Train)
               
     #Calculate total euclidean distance
     error = np.linalg.norm(Test_Image - Projected_Image)
     #stoc2 = timeit.default_timer()
-    #print "Time for finding errors", stoc2-stoc, "seconds"
+    #print ("Time for finding errors", stoc2-stoc, "seconds")
     return error
 
 
@@ -187,10 +187,10 @@ File = open(Data_path,'w+')
 File2 = open("."+Data_path.split(".")[1]+"_summary."+Data_path.split(".")[2],'w+') ###############
 
 File.write("Error%Happy/Correction%Sad/#PCA%Angry/#Ignore%Surprised/#Train%Real Emotion/Loop%Detect as/EigenValue%# PCA%Ignore%Num of Training picture\n") 
-#print "Number of optimal projection axis is:", num_optproj
+#print ("Number of optimal projection axis is:", num_optproj)
 #----------------Train Code -----------------------------#
 for num_Pic in range(num_TrainPic,num_TrainPic+1):
-    print "Num Pic:",num_Pic
+    print ("Num Pic:",num_Pic)
     for num_loop in range(0,num_Repeat):
         # Importing image
     ##    train_images = range(4)
@@ -204,13 +204,13 @@ for num_Pic in range(num_TrainPic,num_TrainPic+1):
             EigVal = range(4)
             for cnt in range(0,4):
                 Eig[cnt],EigVal[cnt],num_Eig = create_Eig(train_images[cnt],Im_Av[cnt],perc_Eig[cnt],num_Ignore)                                   
-            #print "Total images for training is", len(train_images[0]), ",",len(train_images[1]),",",\
-            #      len(train_images[2]),",",len(train_images[3]), "images (For each emotion)"
+            #print ("Total images for training is", len(train_images[0]), ",",len(train_images[1]),",",\
+            #      len(train_images[2]),",",len(train_images[3]), "images (For each emotion)")
 
             #----------------Test Code -----------------------------#
-            #print "Number of training picture:", num_Pic, "pictures"
-            #print "Number of PCA:", num_Eig
-            #print "Ignore", num_Ignore, "eigenvectors"
+            #print ("Number of training picture:", num_Pic, "pictures")
+            #print ("Number of PCA:", num_Eig)
+            #print ("Ignore", num_Ignore, "eigenvectors")
             File2.write("Num of training picture: %"+str(num_Pic)+"%# of PCA: %"+str(num_Eig)+"% Ignore: %"+str(num_Ignore)+"\n")
             correct_pic = 0
             total_pic = 0
@@ -225,7 +225,7 @@ for num_Pic in range(num_TrainPic,num_TrainPic+1):
                     emotion = Angry
                 else:
                     emotion = Surprised
-                #print "Number of testing image ", emotion, "is:", len(test_images[emotion_type]), "pictures"
+                #print ("Number of testing image ", emotion, "is:", len(test_images[emotion_type]), "pictures")
                 for test_image in test_images[emotion_type]:
                     #happy/sad/normal/surprised = Happy/Sad/Angry/Surprised
 
@@ -236,24 +236,24 @@ for num_Pic in range(num_TrainPic,num_TrainPic+1):
                     for cnt in range(0,4):                                         
                         Error_Temp = TestImage(test_image,Eig[cnt],Im_Av[cnt])
                         Error.append(Error_Temp)
-                        #print "Error for emotion", cnt, "is", Error_Temp
+                        #print ("Error for emotion", cnt, "is", Error_Temp)
                         if Error_Temp < MinError:
                             MinError = Error_Temp
                             MinEmotion = cnt
                     if MinEmotion == emotion_type:
                         correct_pic_temp = correct_pic_temp + 1
                     total_pic_temp = total_pic_temp + 1
-                    #print "Error for this image is:", Error,"\n", "Detect as emotion number: ", MinEmotion
-                    #print "Detect as emotion number: ", MinEmotion, "Real emotion is: ", emotion_type , 'Error :', MinError
+                    #print ("Error for this image is:", Error,"\n", "Detect as emotion number: ", MinEmotion)
+                    #print ("Detect as emotion number: ", MinEmotion, "Real emotion is: ", emotion_type , 'Error :', MinError)
                     File.write("Error :%"+str(Error[0])+"%"+str(Error[1])+"%"+str(Error[2])+"%"+str(Error[3])
                                +"%"+str(emotion_type)+"%"+str(MinEmotion)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"\n") 
                 correct_pic = correct_pic+correct_pic_temp
                 total_pic = total_pic+total_pic_temp
-                #print "%Correction for emotion: ", emotion, str(correct_pic_temp/float(total_pic_temp)*100), "%"
+                #print ("%Correction for emotion: ", emotion, str(correct_pic_temp/float(total_pic_temp)*100), "%")
                 File.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+"%"+str(num_Eig)+"%"
                            +str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%"+np.array_str(EigVal[emotion_type],100000)+"%"+str(np.sum(EigVal[emotion_type]))+" %\n")
                 File2.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+" %\n")
-            #print "Total correction is: ",str(correct_pic/float(total_pic)*100), "%\n"                                             
+            #print ("Total correction is: ",str(correct_pic/float(total_pic)*100), "%\)
             File.write("Total accuracy is%" + str(correct_pic/float(total_pic)*100)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%\n")
             File2.write("Total correction is%" + str(correct_pic/float(total_pic)*100)+" %\n")  
                     ##if MinEmotion == 0: 
@@ -268,15 +268,15 @@ for num_Pic in range(num_TrainPic,num_TrainPic+1):
                 
             #toc2 = timeit.default_timer()
 
-            #print "Total time spend for testing is:", toc2-tic, "seconds"
-            #print "Total image tested :", len(image_paths), "images"
-            #print "Emotion detected is", Emotion
+            #print ("Total time spend for testing is:", toc2-tic, "seconds")
+            #print ("Total image tested :", len(image_paths), "images")
+            #print ("Emotion detected is", Emotion)
 File.write("**Ended Process**")
 File.close()
 File2.write("**Ended Process**")
 File2.close()
 
-print "1DPCA Validation Finished"
+print ("1DPCA Validation Finished")
 if TrainWithGlass == 0:
     Message = 'Train with No Glasses'
 elif TrainWithGlass == 1:
@@ -284,10 +284,10 @@ elif TrainWithGlass == 1:
 else:
     Message = 'Train with all images'
 if Use_testpic == 1:
-    print Message,"Test using", path_Test
+    print (Message,"Test using", path_Test)
 else:
-    print Message,"Test using remaining images"
-print "Save at ", Data_path
+    print (Message,"Test using remaining images")
+print ("Save at ", Data_path)
                                              
 
 '''

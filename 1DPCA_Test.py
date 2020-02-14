@@ -21,7 +21,7 @@ emotions = ['hap','sad','ang','sur']                            #Select emotion 
 #----------------------------------------------------------------
 
 def import_image(fullpath): #Importing single image
-    image = np.matrix(np.array(Image.open(fullpath).convert('L'),'float32'))
+    image = np.array(Image.open(fullpath).convert('L'),'float32')
     return image
     
 def TestImage(image_temp, Eig, Im_Av): #Process of testing
@@ -36,14 +36,14 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
     #stoc = timeit.default_timer()
-    #print "Time for create PCA from training eigenface is", stoc-stic, "seconds"
+    #print("Time for create PCA from training eigenface is", stoc-stic, "seconds")
     
     #OpenImage(Eig,PCA_Train)
               
     #Calculate total euclidean distance
     error = np.linalg.norm(Test_Image - Projected_Image)
     #stoc2 = timeit.default_timer()
-    #print "Time for finding errors", stoc2-stoc, "seconds"
+    #print("Time for finding errors", stoc2-stoc, "seconds")
     return error,Test_weight
 
 def OpenImage(Eig,PCA):
@@ -78,7 +78,7 @@ def ReconIm(Eig,num_Eig,Mode,*Path):  #Return eigenface into image
         img = Image.fromarray(np.array(Eig_Im),'L')
         img.save(Path[0])
     else:
-        print "Error mode : 'E' or 'Av'"
+        print("Error mode : 'E' or 'Av'")
     Eig_Im = cv2.resize(Eig_Im,(400,400)) 
     cv2.imshow("Eigenface Image: "+str(num_Eig),Eig_Im)
     
@@ -171,9 +171,9 @@ for emotion in emotions:
             image_path = [os.path.join(path,f) for f in os.listdir(path) \
                             if (f.split("_")[0].endswith(emotion) and f.split("_")[1].endswith(img_index))]
             if image_path == []:
-                print "Error finding data in path:" ,img_index, "from" ,img_indexes
+                print("Error finding data in path:" ,img_index, "from" ,img_indexes)
             image_paths.append(image_path[0])   
-    print "Emotion to be detected:", emotion
+    print("Emotion to be detected:", emotion)
     image_paths.sort()
     for image_path in image_paths:
         #Import testing image
@@ -191,7 +191,7 @@ for emotion in emotions:
             Error.append(Error_Temp)
             if image_path.split('_')[1] == '1006.jpg':
                 Test_Weight.append(Weight_Temp)
-            #print "Error for emotion", cnt, "is", Error_Temp
+            #print("Error for emotion", cnt, "is", Error_Temp)
             if Error_Temp < MinError:
                 MinError = Error_Temp
                 MinEmotion = cnt
@@ -205,13 +205,13 @@ for emotion in emotions:
         else:
             Emotion = 'Surprised'
         
-        print "Emotion detected for image",os.path.split(image_path)[1] ,"is:", Emotion, " with error", Error
+        print("Emotion detected for image",os.path.split(image_path)[1] ,"is:", Emotion, " with error", Error)
         
     
 toc = timeit.default_timer()
-print "Total time spend for testing is:", toc-tic, "seconds"
-print "Total image tested :", len(image_paths), "images"
-print "Emotion detected is", Emotion
+print("Total time spend for testing is:", toc-tic, "seconds")
+print("Total image tested :", len(image_paths), "images")
+print("Emotion detected is", Emotion)
 
 
 
