@@ -11,24 +11,8 @@ import cv2
 import numpy as np
 from PIL import Image
 
+
 # sys.path.append(original_dir)
-
-# -------------------Initialize ----------------------------------
-percent_Eig = [80.0, 80.0, 80.0, 80.0]  # Minimum of percentage of eigenvalue
-num_Eig = 16                                #Number of Eig
-num_Pic = 21                                #Number of Pictures
-image_dir = './TrainingPicsAll'  # Training pictures path
-img_index = []
-# img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
-#              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',
-#              '1118.jpg', '1123.jpg', '1126.jpg', '1129.jpg']
-PCA_Path = './TrainedData/1DPCA_2_Test.npz'  # Path to save PCA
-
-# ----------------------------------------------------------------
-
-tic = timeit.default_timer()
-
-
 def import_images(path, emotion, img_indexes=None, img_amount=None):
     """
     Fetch list of images directory of specific emotion. Specifically work for our file format.
@@ -74,7 +58,7 @@ def load_image(full_path):  # Importing single image
     return image_vec
 
 
-def create_eigface(images, im_av, num_eigen=None, percent_eigen=None):  # Process of creating optimal projection axis
+def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of creating optimal projection axis
     """
     Function to create eigenface (Using Principal Component Analysis with some extra technique to save computation cost)
     :param images           : ndarray of size (num_image, features)
@@ -111,7 +95,7 @@ def create_eigface(images, im_av, num_eigen=None, percent_eigen=None):  # Proces
         # Calculate amount of eigenfaces by select the minimum amount that has total eigenvalues higher than threshold
         sum_eigenvalue = np.sum(eig_value, dtype='float32')
         for i in range(1, num_pic):
-            if np.sum(eig_value[0:i]) > percent_eigen*sum_eigenvalue/100:
+            if np.sum(eig_value[0:i]) > percent_eigen * sum_eigenvalue / 100:
                 num_eigen = i
                 break
     else:  # num_eigen mode
@@ -120,7 +104,7 @@ def create_eigface(images, im_av, num_eigen=None, percent_eigen=None):  # Proces
             print("Warning: Eigenfaces is limited to no more than the number of training images")
 
     # Fetch a selected number of eigenface and eigenvalue
-    eigenface = eig_vector[:,0:num_eigen]
+    eigenface = eig_vector[:, 0:num_eigen]
 
     # Select only num_Eig vectors and normalize to size of 1
     # eigenface = eig_vector/eig_vector.sum(axis=0,keepdims=1)  # Unused
@@ -129,25 +113,37 @@ def create_eigface(images, im_av, num_eigen=None, percent_eigen=None):  # Proces
     return eigenface, eig_value
 
 
-def reconstruct_image(eigenface, num_eigenface, mode):  # Return eigenface into image
-    # ReconIm(Eig[0],0,'E') or RecomIm(Im_Av[0],0,'Av')
-
-    if mode == "E":
-        Eig_Im = np.reshape(eigenface[:, num_eigenface], (100, 100))
-        Eig_Im = Eig_Im - np.matrix.min(Eig_Im)
-        Eig_Im = np.array(Eig_Im / np.max(Eig_Im) * 255, dtype=np.uint8)
-    elif mode == "E2":
-        Eig_Im = np.reshape(eigenface[:, num_eigenface], (100, 100))
-        Eig_Im = -Eig_Im
-        Eig_Im = Eig_Im - np.matrix.min(Eig_Im)
-        Eig_Im = np.array(Eig_Im / np.max(Eig_Im) * 255, dtype=np.uint8)
-    elif mode == "Av":
-        Eig_Im = np.reshape(eigenface, (100, 100))
-        Eig_Im = np.array(Eig_Im, dtype=np.uint8)
+def reconstruct_image(images, num_eigenface, mode, image_dim=[100, 100]):
+    """
+    Transform the eigenface into an image and display with openCV for visualization
+    :param images           : ndarray of image or eigenface with dimension
+    :param num_eigenface    : int, amount of eigenface to visualize
+    :param mode             : string. Type of image of the following option. Case-insensitive.
+                            :'eig' or 'eig_inv' for eigenface of size [features, num_eigenface]
+                            :'eig_inv' will give the inverted image instead
+                            :'normal_im' for vectorized image of size [features]
+    """
+    # Return eigenface into image
+    # reconstruct_image(eigenface[0],0,'eig') or reconstruct_image(eig_value[0],0,'normal_im')
+    mode = mode.lower()
+    mode_option = ['eig', 'eig_inv', 'normal_im']
+    assert mode in mode_option, "Mode need to be one of the following: {}".format(mode_option)
+    if mode == "eig":
+        eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
+        eigen_image = eigen_image - np.matrix.min(eigen_image)
+        eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
+    elif mode == "eig_inv":
+        eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
+        eigen_image = -eigen_image
+        eigen_image = eigen_image - np.matrix.min(eigen_image)
+        eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
+    elif mode == "normal_im":
+        eigen_image = np.reshape(images, (image_dim[0], image_dim[1]))
+        eigen_image = np.array(eigen_image, dtype=np.uint8)
     else:
         print("Error mode : 'E' or 'Av'")
-    Eig_Im = cv2.resize(Eig_Im, (400, 400))
-    cv2.imshow("Eigenface Image: " + str(num_eigenface), Eig_Im)
+    im = cv2.resize(eigen_image, (400, 400))
+    cv2.imshow("Eigenface Image: " + str(num_eigenface), im)
 
     cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -156,37 +152,50 @@ def reconstruct_image(eigenface, num_eigenface, mode):  # Return eigenface into 
 
 # ----------------Main Code -----------------------------#
 if __name__ == '__main__':
-    # Importing image
-    train_images = range(4)
-    Im_Av = range(4)
-    train_images[0], Im_Av[0] = import_images(image_dir, num_Pic, 'hap', img_index)
-    train_images[1], Im_Av[1] = import_images(image_dir, num_Pic, 'sad', img_index)
-    train_images[2], Im_Av[2] = import_images(image_dir, num_Pic, 'ang', img_index)
-    train_images[3], Im_Av[3] = import_images(image_dir, num_Pic, 'sur', img_index)
-    # train_images[cnt],Im_Av[cnt] = import_images(path,'happy')
-    # train_images[cnt],Im_Av[cnt] = import_images(path,'sad')
-    # train_images[cnt],Im_Av[cnt] = import_images(path,'normal')
-    # train_images[cnt],Im_Av[cnt] = import_images(path,'surprised')
+    tic = timeit.default_timer()
 
-    # Create Eigenface
-    Eig = range(4)
-    Eig_Val = range(4)
-    for cnt in range(0, 4):
-        Eig[cnt], Eig_Val[cnt] = create_eigface(train_images[cnt], Im_Av[cnt], percent_Eig[cnt])
+    # Parameters
+    percent_Eig = [80.0, 80.0, 80.0, 80.0]  # Minimum of percentage of eigenvalue
+    num_Eig = 16  # Number of Eig
+    num_Pic = 21  # Number of Pictures
+    image_dir = './TrainingPicsAll'  # Training pictures path
+    img_index = []
+    # img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
+    #              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',
+    #              '1118.jpg', '1123.jpg', '1126.jpg', '1129.jpg']
+    PCA_Path = './TrainedData/1DPCA_2_Test.npz'  # Path to save PCA
+
+    # Importing image
+    data = {'image_emotion': ['hap', 'sad', 'ang', 'sur'],
+            'train_image': [], 'average_image': [],
+            'eigenface': [], 'eigenvalue': []
+            }
+
+    for i, emo in enumerate(data['image_emotion']):
+        train_image, im_avg = import_images(image_dir, num_Pic, emo)
+        eigface, eigval = create_eigface(train_image, im_avg, percent_Eig[i])
+        data['train_image'].append(train_image)
+        data['average_image'].append(im_avg)
+        data['eigenface'].append(eigface)
+        data['eigenvalue'].append(eigval)
 
     # Save to "PCATrain.npz"
     File = open(PCA_Path, 'w+')
     File.close()
-    np.savez(PCA_Path, Eig0=Eig[0], ImAv0=Im_Av[0], Eig1=Eig[1], ImAv1=Im_Av[1] \
-             , Eig2=Eig[2], ImAv2=Im_Av[2], Eig3=Eig[3], ImAv3=Im_Av[3])
+    np.savez(PCA_Path,
+             Eig0=data['eigenface'][0], ImAv0=data['average_image'][0],
+             Eig1=data['eigenface'][1], ImAv1=data['average_image'][1],
+             Eig2=data['eigenface'][2], ImAv2=data['average_image'][2],
+             Eig3=data['eigenface'][3], ImAv3=data['average_image'][3])
 
     toc = timeit.default_timer()
 
-    print("Total time spend for training is:", toc - tic, "seconds")
-    print("Total images for training is", np.shape(train_images[0])[1], ",", np.shape(train_images[1])[1], ",", \
-          np.shape(train_images[2])[1], ",", np.shape(train_images[3])[1], "images (For each emotion)")
-    print("Image size is", train_images[0][0].shape)
-    print("Number of optimal projection axis is:", len(Eig[0]))
+    print("Total time spend for training is: {} seconds".format(toc - tic))
+    print("Total images for training is {}, {}, {}, {} images (For each emotion)".format(
+        np.shape(data['train_image'][0])[1], np.shape(data['train_image'][1])[1],
+        np.shape(data['train_image'][2])[1], np.shape(data['train_image'][3])[1]))
+    print("Image size is", data['train_image'][0][0].shape)
+    print("Number of optimal projection axis is:", len(data['eigenface'][0]))
 
 '''
 # Perform the tranining
