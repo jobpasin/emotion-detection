@@ -1,0 +1,8 @@
+*.pdf
+*.npz
+*.jpg
+*.png
+*.txt
+Appendix/*
+.idea/*
+unused/*
