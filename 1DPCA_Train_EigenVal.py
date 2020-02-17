@@ -20,14 +20,14 @@ def import_images(path, emotion, img_indexes=None, img_amount=None):
     :param emotion:     String of emotion name. Image name should start with emotion e.g. sad_1010.jpg
     :param img_indexes: List of string of specific image id you want e.g. [1010.jpg]. Use None to fetch all
     :param img_amount:  Amount of image you want to fetch. Use None to fetch all
-    :return:            ndarray of size (img_amount, h*w) or (num_image, features)
+    :return:            ndarray of size (h*w, img_amount) or (features, num_image)
     """
     if type(path) is not list:
         path = [path]
 
     image_paths = []
     for p in path:
-        if img_indexes is None:
+        if img_indexes is None or len(img_indexes) == 0:
             im_p = [os.path.join(p, f) for f in os.listdir(p) \
                     if f.split("_")[0].endswith(emotion)]  # Get path of file that start with 'emotion'
         else:
@@ -48,7 +48,7 @@ def import_images(path, emotion, img_indexes=None, img_amount=None):
 
     image_vector = image_vector - image_average
     # return the images list and average
-    return image_vector, image_average
+    return image_vector.T, image_average.T
 
 
 def load_image(full_path):  # Importing single image
@@ -61,7 +61,7 @@ def load_image(full_path):  # Importing single image
 def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of creating optimal projection axis
     """
     Function to create eigenface (Using Principal Component Analysis with some extra technique to save computation cost)
-    :param images           : ndarray of size (num_image, features)
+    :param images           : ndarray of size (features, num_image)
     :param num_eigen        : int, number of eigenfaces. Cannot be specified with percent_eigen
     :param percent_eigen    : float, number of percentage of eigenvalues for determine number of eigenface
 
@@ -71,9 +71,6 @@ def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of cr
     if num_eigen is None and percent_eigen is None:
         raise ValueError("Either 'num_eigen' or 'percent_eigen' need to be specified")
 
-    # Transpose so the dimension will be [features, num_pic].
-    # This will be more simple for the following computation
-    images = images.T
     features, num_pic = np.shape(images)
     # Create pseudo covariance matrix. This case will have matrix size [num_pic, num_pic]
     # which can be much smaller than standard approach where cov matrix will be [features, features]
@@ -91,12 +88,13 @@ def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of cr
     eig_vector = eig_vector[:, index]
 
     if percent_eigen is not None:  # percent_eigen mode
-        assert percent_eigen > 0 and percent_eigen < 100, "percent_eigen need to be between 0 to 100"
+        assert 0 < percent_eigen < 100, "percent_eigen need to be between 0 to 100"
         # Calculate amount of eigenfaces by select the minimum amount that has total eigenvalues higher than threshold
         sum_eigenvalue = np.sum(eig_value, dtype='float32')
         for i in range(1, num_pic):
             if np.sum(eig_value[0:i]) > percent_eigen * sum_eigenvalue / 100:
                 num_eigen = i
+                print("Using {} eigenfaces".format(num_eigen))
                 break
     else:  # num_eigen mode
         if num_pic < num_eigen:
@@ -130,7 +128,7 @@ def reconstruct_image(images, num_eigenface, mode, image_dim=[100, 100]):
     assert mode in mode_option, "Mode need to be one of the following: {}".format(mode_option)
     if mode == "eig":
         eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
-        eigen_image = eigen_image - np.matrix.min(eigen_image)
+        eigen_image = eigen_image - np.min(eigen_image)
         eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
     elif mode == "eig_inv":
         eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
@@ -155,15 +153,15 @@ if __name__ == '__main__':
     tic = timeit.default_timer()
 
     # Parameters
-    percent_Eig = [80.0, 80.0, 80.0, 80.0]  # Minimum of percentage of eigenvalue
-    num_Eig = 16  # Number of Eig
+    precent_eig_param = [90.0, 90.0, 90.0, 90.0]  # Minimum of percentage of eigenvalue
+    num_eig_param = None  # Number of Eig
     num_Pic = 21  # Number of Pictures
     image_dir = './TrainingPicsAll'  # Training pictures path
     img_index = []
     # img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
     #              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',
     #              '1118.jpg', '1123.jpg', '1126.jpg', '1129.jpg']
-    PCA_Path = './TrainedData/1DPCA_2_Test.npz'  # Path to save PCA
+    PCA_Path = './debug/train_debug.npz'  # Path to save PCA
 
     # Importing image
     data = {'image_emotion': ['hap', 'sad', 'ang', 'sur'],
@@ -172,8 +170,8 @@ if __name__ == '__main__':
             }
 
     for i, emo in enumerate(data['image_emotion']):
-        train_image, im_avg = import_images(image_dir, num_Pic, emo)
-        eigface, eigval = create_eigface(train_image, im_avg, percent_Eig[i])
+        train_image, im_avg = import_images(image_dir, emo, img_index)
+        eigface, eigval = create_eigface(train_image, num_eigen=None, percent_eigen=precent_eig_param[i])
         data['train_image'].append(train_image)
         data['average_image'].append(im_avg)
         data['eigenface'].append(eigface)
@@ -194,8 +192,8 @@ if __name__ == '__main__':
     print("Total images for training is {}, {}, {}, {} images (For each emotion)".format(
         np.shape(data['train_image'][0])[1], np.shape(data['train_image'][1])[1],
         np.shape(data['train_image'][2])[1], np.shape(data['train_image'][3])[1]))
-    print("Image size is", data['train_image'][0][0].shape)
-    print("Number of optimal projection axis is:", len(data['eigenface'][0]))
+    print("Image size is {} features".format(np.shape(data['train_image'][0])[0]))
+    print("Number of optimal projection axis is:", np.shape(data['eigenface'][0])[1])
 
 '''
 # Perform the tranining
