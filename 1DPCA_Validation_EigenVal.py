@@ -3,7 +3,7 @@
 
 import os, sys
 Original_Dir = os.getcwd()
-#sys.path.append('/home/pi/.virtualenvs/cv/lib/python2.7/site-packages') #######
+#sys.path.append('/home/pi/.virtualenvs/cv/lib/python3.6/site-packages') #######
 import random
 import timeit
 import cv2
@@ -11,36 +11,7 @@ import numpy as np
 from PIL import Image
 sys.path.append(Original_Dir)
 
-#-------------------Initialize ----------------------------------
-Path = 1
-Use_testpic = 0                     #0 = Use remaining train picture as test picture
-                                    #1 = Use path_Test as test picture
 
-
-
-if Path == 1:
-    path_Train = './TrainingPicsNG'   #Training picture path
-    path_Test = './TestingPics' #Testing picture path
-    Data_path = './Report/Data1D_Valid_TestAA4.txt'        #Text data saving path ##########
-elif Path == 2:
-    path_Train = './NitadDB/TrainingA'   #Training picture path
-    path_Test = './NitadDB/TestingA'     #Testing picture path
-    Data_path = './Report/1D_Nitad_Valid_A_A.txt'        #Text data saving path ##########
-else:
-    print ('Path Error')
-TrainWithGlass = 0                  #0 = No glasses, #1 = Glasses only, #2= All
-num_TrainPic = 14                   #Max number of training pic (start at 3)
-perc_Eig = [73.,60.,73.,67.]                       #Max number of Eig (start at 1)
-num_start_max = 0                   #Ignore some highest eigenvectors
-num_Repeat = 300                    #Repeat the process
-Happy = 'hap'                       #Name of each emotion
-Sad = 'sad'
-Angry = 'ang'
-Surprised = 'sur'
-#Happy = 'happy'
-#Sad = 'sad'
-#Angry = 'wink'
-#Surprised = 'surprised'
 
 #----------------------------------------------------------------
 
@@ -164,12 +135,12 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     image_temp = np.reshape(image_temp,np.shape(image_temp)[0]*np.shape(image_temp)[1],'C').transpose()
     Test_Image = image_temp-Im_Av
 
-    #Create projection face from training eigenface
+    #Create projection face from training eigenface.py
     Test_weight = Eig.transpose()*Test_Image
     Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
     #stoc = timeit.default_timer()
-    #print ("Time for create PCA from training eigenface is", stoc-stic, "seconds")
+    #print ("Time for create PCA from training eigenface.py is", stoc-stic, "seconds")
     
     #OpenImage(Eig,PCA_Train)
               
@@ -180,138 +151,154 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     return error
 
 
-#----------------Setup Code -----------------------------#
+if __name__ == "__main__":
+    Use_testpic = 0  # 0 = Use remaining train picture as test picture
+    # 1 = Use path_Test as test picture
+
+    path_Train = './TrainingPicsNG'  # Training picture path
+    path_Test = './TestingPics'  # Testing picture path
+    Data_path = './Report/Data1D_Valid_TestAA4.txt'  # Text data saving path ##########
+
+    # TrainWithGlass = 0  # 0 = No glasses, #1 = Glasses only, #2= All
+    num_TrainPic = 14  # Max number of training pic (start at 3)
+    perc_Eig = [73., 60., 73., 67.]  # Max number of Eig (start at 1)
+    num_start_max = 0  # Ignore some highest eigenvectors
+    num_Repeat = 300  # Repeat the process
+    Happy = 'hap'  # Name of each emotion
+    Sad = 'sad'
+    Angry = 'ang'
+    Surprised = 'sur'
 
 
-File = open(Data_path,'w+') 
-File2 = open("."+Data_path.split(".")[1]+"_summary."+Data_path.split(".")[2],'w+') ###############
+    File = open(Data_path,'w+')
+    File2 = open("."+Data_path.split(".")[1]+"_summary."+Data_path.split(".")[2],'w+') ###############
 
-File.write("Error%Happy/Correction%Sad/#PCA%Angry/#Ignore%Surprised/#Train%Real Emotion/Loop%Detect as/EigenValue%# PCA%Ignore%Num of Training picture\n") 
-#print ("Number of optimal projection axis is:", num_optproj)
-#----------------Train Code -----------------------------#
-for num_Pic in range(num_TrainPic,num_TrainPic+1):
-    print ("Num Pic:",num_Pic)
-    for num_loop in range(0,num_Repeat):
-        # Importing image
-    ##    train_images = range(4)
-    ##    test_images =range(4)
-    ##    Im_Av = range(4)
-        train_images, test_images,Im_Av,Im_Index = import_images(path_Train,num_Pic,Use_testpic,path_Test,TrainWithGlass)
-        File.write("Random samples : "+str(Im_Index)+"Num_Pic is%"+str(num_Pic)+"%Loop:%"+str(num_loop)+"\n")
-        for num_Ignore in range(0,num_start_max+1):
-            # Create Eigenface 
-            Eig = range(4)
-            EigVal = range(4)
-            for cnt in range(0,4):
-                Eig[cnt],EigVal[cnt],num_Eig = create_Eig(train_images[cnt],Im_Av[cnt],perc_Eig[cnt],num_Ignore)                                   
-            #print ("Total images for training is", len(train_images[0]), ",",len(train_images[1]),",",\
-            #      len(train_images[2]),",",len(train_images[3]), "images (For each emotion)")
+    File.write("Error%Happy/Correction%Sad/#PCA%Angry/#Ignore%Surprised/#Train%Real Emotion/Loop%Detect as/EigenValue%# PCA%Ignore%Num of Training picture\n")
+    #print ("Number of optimal projection axis is:", num_optproj)
+    #----------------Train Code -----------------------------#
+    for num_Pic in range(num_TrainPic,num_TrainPic+1):
+        print ("Num Pic:",num_Pic)
+        for num_loop in range(0,num_Repeat):
+            # Importing image
+        ##    train_images = range(4)
+        ##    test_images =range(4)
+        ##    Im_Av = range(4)
+            train_images, test_images,Im_Av,Im_Index = import_images(path_Train,num_Pic,Use_testpic,path_Test,TrainWithGlass)
+            File.write("Random samples : "+str(Im_Index)+"Num_Pic is%"+str(num_Pic)+"%Loop:%"+str(num_loop)+"\n")
+            for num_Ignore in range(0,num_start_max+1):
+                # Create Eigenface
+                Eig = range(4)
+                EigVal = range(4)
+                for cnt in range(0,4):
+                    Eig[cnt],EigVal[cnt],num_Eig = create_Eig(train_images[cnt],Im_Av[cnt],perc_Eig[cnt],num_Ignore)
+                #print ("Total images for training is", len(train_images[0]), ",",len(train_images[1]),",",\
+                #      len(train_images[2]),",",len(train_images[3]), "images (For each emotion)")
 
-            #----------------Test Code -----------------------------#
-            #print ("Number of training picture:", num_Pic, "pictures")
-            #print ("Number of PCA:", num_Eig)
-            #print ("Ignore", num_Ignore, "eigenvectors")
-            File2.write("Num of training picture: %"+str(num_Pic)+"%# of PCA: %"+str(num_Eig)+"% Ignore: %"+str(num_Ignore)+"\n")
-            correct_pic = 0
-            total_pic = 0
-            for emotion_type in range(0,4):
-                correct_pic_temp = 0
-                total_pic_temp = 0
-                if emotion_type == 0:
-                    emotion = Happy
-                elif emotion_type == 1:
-                    emotion = Sad
-                elif emotion_type == 2:
-                    emotion = Angry
-                else:
-                    emotion = Surprised
-                #print ("Number of testing image ", emotion, "is:", len(test_images[emotion_type]), "pictures")
-                for test_image in test_images[emotion_type]:
-                    #happy/sad/normal/surprised = Happy/Sad/Angry/Surprised
+                #----------------Test Code -----------------------------#
+                #print ("Number of training picture:", num_Pic, "pictures")
+                #print ("Number of PCA:", num_Eig)
+                #print ("Ignore", num_Ignore, "eigenvectors")
+                File2.write("Num of training picture: %"+str(num_Pic)+"%# of PCA: %"+str(num_Eig)+"% Ignore: %"+str(num_Ignore)+"\n")
+                correct_pic = 0
+                total_pic = 0
+                for emotion_type in range(0,4):
+                    correct_pic_temp = 0
+                    total_pic_temp = 0
+                    if emotion_type == 0:
+                        emotion = Happy
+                    elif emotion_type == 1:
+                        emotion = Sad
+                    elif emotion_type == 2:
+                        emotion = Angry
+                    else:
+                        emotion = Surprised
+                    #print ("Number of testing image ", emotion, "is:", len(test_images[emotion_type]), "pictures")
+                    for test_image in test_images[emotion_type]:
+                        #happy/sad/normal/surprised = Happy/Sad/Angry/Surprised
 
-                    #Determine error for each class
-                    Error = list()
-                    MinError = 100000000
-                    MinEmotion = 0                                             
-                    for cnt in range(0,4):                                         
-                        Error_Temp = TestImage(test_image,Eig[cnt],Im_Av[cnt])
-                        Error.append(Error_Temp)
-                        #print ("Error for emotion", cnt, "is", Error_Temp)
-                        if Error_Temp < MinError:
-                            MinError = Error_Temp
-                            MinEmotion = cnt
-                    if MinEmotion == emotion_type:
-                        correct_pic_temp = correct_pic_temp + 1
-                    total_pic_temp = total_pic_temp + 1
-                    #print ("Error for this image is:", Error,"\n", "Detect as emotion number: ", MinEmotion)
-                    #print ("Detect as emotion number: ", MinEmotion, "Real emotion is: ", emotion_type , 'Error :', MinError)
-                    File.write("Error :%"+str(Error[0])+"%"+str(Error[1])+"%"+str(Error[2])+"%"+str(Error[3])
-                               +"%"+str(emotion_type)+"%"+str(MinEmotion)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"\n") 
-                correct_pic = correct_pic+correct_pic_temp
-                total_pic = total_pic+total_pic_temp
-                #print ("%Correction for emotion: ", emotion, str(correct_pic_temp/float(total_pic_temp)*100), "%")
-                File.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+"%"+str(num_Eig)+"%"
-                           +str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%"+np.array_str(EigVal[emotion_type],100000)+"%"+str(np.sum(EigVal[emotion_type]))+" %\n")
-                File2.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+" %\n")
-            #print ("Total correction is: ",str(correct_pic/float(total_pic)*100), "%\)
-            File.write("Total accuracy is%" + str(correct_pic/float(total_pic)*100)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%\n")
-            File2.write("Total correction is%" + str(correct_pic/float(total_pic)*100)+" %\n")  
-                    ##if MinEmotion == 0: 
-                    ##    Emotion = 'Happy'
-                    ##elif MinEmotion == 1:
-                    ##    Emotion = 'Sad'                                             
-                    ##elif MinEmotion == 2:
-                    ##    Emotion = 'Angry'
-                    ##else:
-                    ##    Emotion = 'Surprised'
-                    ##print "Emotion detected for image",os.path.split(image_path)[1] ,"is:", Emotion, " with error", MinError
-                
-            #toc2 = timeit.default_timer()
+                        #Determine error for each class
+                        Error = list()
+                        MinError = 100000000
+                        MinEmotion = 0
+                        for cnt in range(0,4):
+                            Error_Temp = TestImage(test_image,Eig[cnt],Im_Av[cnt])
+                            Error.append(Error_Temp)
+                            #print ("Error for emotion", cnt, "is", Error_Temp)
+                            if Error_Temp < MinError:
+                                MinError = Error_Temp
+                                MinEmotion = cnt
+                        if MinEmotion == emotion_type:
+                            correct_pic_temp = correct_pic_temp + 1
+                        total_pic_temp = total_pic_temp + 1
+                        #print ("Error for this image is:", Error,"\n", "Detect as emotion number: ", MinEmotion)
+                        #print ("Detect as emotion number: ", MinEmotion, "Real emotion is: ", emotion_type , 'Error :', MinError)
+                        File.write("Error :%"+str(Error[0])+"%"+str(Error[1])+"%"+str(Error[2])+"%"+str(Error[3])
+                                   +"%"+str(emotion_type)+"%"+str(MinEmotion)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"\n")
+                    correct_pic = correct_pic+correct_pic_temp
+                    total_pic = total_pic+total_pic_temp
+                    #print ("%Correction for emotion: ", emotion, str(correct_pic_temp/float(total_pic_temp)*100), "%")
+                    File.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+"%"+str(num_Eig)+"%"
+                               +str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%"+np.array_str(EigVal[emotion_type],100000)+"%"+str(np.sum(EigVal[emotion_type]))+" %\n")
+                    File2.write("Correction for "+emotion+" is%" + str(correct_pic_temp/float(total_pic_temp)*100)+" %\n")
+                #print ("Total correction is: ",str(correct_pic/float(total_pic)*100), "%\)
+                File.write("Total accuracy is%" + str(correct_pic/float(total_pic)*100)+"%"+str(num_Eig)+"%"+str(num_Ignore)+"%"+str(num_Pic)+"%"+str(num_loop)+"%\n")
+                File2.write("Total correction is%" + str(correct_pic/float(total_pic)*100)+" %\n")
+                        ##if MinEmotion == 0:
+                        ##    Emotion = 'Happy'
+                        ##elif MinEmotion == 1:
+                        ##    Emotion = 'Sad'
+                        ##elif MinEmotion == 2:
+                        ##    Emotion = 'Angry'
+                        ##else:
+                        ##    Emotion = 'Surprised'
+                        ##print "Emotion detected for image",os.path.split(image_path)[1] ,"is:", Emotion, " with error", MinError
 
-            #print ("Total time spend for testing is:", toc2-tic, "seconds")
-            #print ("Total image tested :", len(image_paths), "images")
-            #print ("Emotion detected is", Emotion)
-File.write("**Ended Process**")
-File.close()
-File2.write("**Ended Process**")
-File2.close()
+                #toc2 = timeit.default_timer()
 
-print ("1DPCA Validation Finished")
-if TrainWithGlass == 0:
-    Message = 'Train with No Glasses'
-elif TrainWithGlass == 1:
-    Message = 'Train with Glasses'
-else:
-    Message = 'Train with all images'
-if Use_testpic == 1:
-    print (Message,"Test using", path_Test)
-else:
-    print (Message,"Test using remaining images")
-print ("Save at ", Data_path)
-                                             
+                #print ("Total time spend for testing is:", toc2-tic, "seconds")
+                #print ("Total image tested :", len(image_paths), "images")
+                #print ("Emotion detected is", Emotion)
+    File.write("**Ended Process**")
+    File.close()
+    File2.write("**Ended Process**")
+    File2.close()
 
-'''
-# Perform the tranining
-recognizer.train(images, np.array(labels))
-i = 0
+    print ("1DPCA Validation Finished")
+    if TrainWithGlass == 0:
+        Message = 'Train with No Glasses'
+    elif TrainWithGlass == 1:
+        Message = 'Train with Glasses'
+    else:
+        Message = 'Train with all images'
+    if Use_testpic == 1:
+        print (Message,"Test using", path_Test)
+    else:
+        print (Message,"Test using remaining images")
+    print ("Save at ", Data_path)
 
 
-# Append the images with the extension .sad into image_paths
-image_paths = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.sad')]
-for image_path in image_paths:
-    predict_image_pil = Image.open(image_path).convert('L')
-    predict_image = np.array(predict_image_pil, 'uint8')
-    faces = faceCascade.detectMultiScale(predict_image)
-    for (x, y, w, h) in faces:
-        i = i+1
-        cropped = np.array(cv2.resize(predict_image[y: y + h, x: x + w],(150,150)),'uint8')
-        nbr_predicted, conf = recognizer.predict(cropped)
-        nbr_actual = int(os.path.split(image_path)[1].split(".")[0].replace("subject", ""))
-        if nbr_actual == nbr_predicted:
-            print "{} is Correctly Recognized with confidence {}".format(nbr_actual, conf)
-        else:
-            print "{} is Incorrect Recognized as {}".format(nbr_actual, nbr_predicted)
-        cv2.imshow("Recognizing Face", cropped)
-        cv2.waitKey(1000)
-        
-'''
+    '''
+    # Perform the tranining
+    recognizer.train(images, np.array(labels))
+    i = 0
+    
+    
+    # Append the images with the extension .sad into image_paths
+    image_paths = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.sad')]
+    for image_path in image_paths:
+        predict_image_pil = Image.open(image_path).convert('L')
+        predict_image = np.array(predict_image_pil, 'uint8')
+        faces = faceCascade.detectMultiScale(predict_image)
+        for (x, y, w, h) in faces:
+            i = i+1
+            cropped = np.array(cv2.resize(predict_image[y: y + h, x: x + w],(150,150)),'uint8')
+            nbr_predicted, conf = recognizer.predict(cropped)
+            nbr_actual = int(os.path.split(image_path)[1].split(".")[0].replace("subject", ""))
+            if nbr_actual == nbr_predicted:
+                print "{} is Correctly Recognized with confidence {}".format(nbr_actual, conf)
+            else:
+                print "{} is Incorrect Recognized as {}".format(nbr_actual, nbr_predicted)
+            cv2.imshow("Recognizing Face", cropped)
+            cv2.waitKey(1000)
+            
+    '''

@@ -160,12 +160,12 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     image_temp = np.reshape(image_temp,np.shape(image_temp)[0]*np.shape(image_temp)[1],'C').transpose()
     Test_Image = image_temp-Im_Av
 
-    #Create projection face from training eigenface
+    #Create projection face from training eigenface.py
     Test_weight = Eig.transpose()*Test_Image
     Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
     #stoc = timeit.default_timer()
-    #print ("Time for create PCA from training eigenface is", stoc-stic, "seconds")
+    #print ("Time for create PCA from training eigenface.py is", stoc-stic, "seconds")
     
     #OpenImage(Eig,PCA_Train)
               

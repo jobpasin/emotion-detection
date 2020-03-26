@@ -6,3 +6,8 @@
 Appendix/*
 .idea/*
 unused/*
+*.xml
+*.iml
+*__pycache__*
+weights/*
+!weights/.gitkeep

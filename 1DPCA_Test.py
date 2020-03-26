@@ -31,12 +31,12 @@ def TestImage(image_temp, Eig, Im_Av): #Process of testing
     image_temp = np.reshape(image_temp,np.shape(image_temp)[0]*np.shape(image_temp)[0],'C').transpose()
     Test_Image = image_temp-Im_Av
 
-    #Create projection face from training eigenface
+    #Create projection face from training eigenface.py
     Test_weight = Eig.transpose()*Test_Image
     Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
     #stoc = timeit.default_timer()
-    #print("Time for create PCA from training eigenface is", stoc-stic, "seconds")
+    #print("Time for create PCA from training eigenface.py is", stoc-stic, "seconds")
     
     #OpenImage(Eig,PCA_Train)
               
@@ -56,7 +56,7 @@ def OpenImage(Eig,PCA):
     img.save('myimage.png')
     img.show()
     
-def ReconIm(Eig,num_Eig,Mode,*Path):  #Return eigenface into image
+def ReconIm(Eig,num_Eig,Mode,*Path):  #Return eigenface.py into image
     #ReconIm(Eig[0],0,'E') or RecomIm(Im_Av[0],0,'Av')
     
     if Mode == "E":
@@ -101,7 +101,7 @@ def ProjIm(Im_Test,num_Eig,Eigs,Im_Avs):
         image_temp = np.reshape(Im_Test,H*W,'C').transpose()
         Test_Image = image_temp-Im_Av
         Eig = Eig[:,0:num_Eig]
-        #Create projection face from training eigenface
+        #Create projection face from training eigenface.py
         Test_weight = Eig.transpose()*Test_Image
         Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
@@ -132,7 +132,7 @@ def SaveIm(Im_Test,num_Eig,Eigs,Im_Avs,count):
         image_temp = np.reshape(Im_Test,H*W,'C').transpose()
         Test_Image = image_temp-Im_Av
         Eig = Eig[:,0:num_Eig]
-        #Create projection face from training eigenface
+        #Create projection face from training eigenface.py
         Test_weight = Eig.transpose()*Test_Image
         Projected_Image = Eig*Test_weight #Principle component of image using optimal projection
 
