@@ -8,8 +8,10 @@ import os
 # sys.path.append('/home/pi/.virtualenvs/cv/lib/python3.6/site-packages')  # For Raspberry Pi
 import timeit
 import numpy as np
+
 from PIL import Image
 from utils.eigenface import create_eigface
+from utils.data import *
 
 
 def import_images(paths, emotion, img_indexes=None, img_amount=None):
@@ -27,12 +29,11 @@ def import_images(paths, emotion, img_indexes=None, img_amount=None):
     image_paths = []
     for p in paths:
         if img_indexes is None or len(img_indexes) == 0:
-            im_p = [os.path.join(p, f) for f in os.listdir(p) \
-                    if f.split("_")[0].endswith(emotion)]  # Get path of file that start with 'emotion'
+            image_path = [im_p for im_p in import_image_path(p) if im_p.split("_")[0].endswith(emotion)]
         else:
-            im_p = [os.path.join(p, f) for f in os.listdir(p) \
-                    if (f.split("_")[0].endswith(emotion) and f.split("_")[1] in img_indexes)]
-        image_paths = image_paths + im_p
+            image_path = [im_p for im_p in import_image_path(p) if im_p.split("_")[0].endswith(emotion)
+                          and im_p.split("_")[1] in img_indexes]
+        image_paths = image_paths + image_path
     image_paths.sort()
 
     if img_amount is None:
@@ -42,12 +43,10 @@ def import_images(paths, emotion, img_indexes=None, img_amount=None):
             len(image_paths))
 
     # Load all image and subtract the value by the average value
-    image_vector = np.stack([load_image(image_path) for image_path in image_paths[0:img_amount]])
-    image_average = np.tile(np.mean(image_vector, 0), (img_amount, 1)) / img_amount
+    im_vector, im_average = preprocess(image_paths)
 
-    image_vector = image_vector - image_average
     # return the images list and average
-    return image_vector.T, image_average.T
+    return im_vector, im_average
 
 
 def load_image(full_path):  # Importing single image
