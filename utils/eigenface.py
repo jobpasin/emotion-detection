@@ -104,3 +104,35 @@ def reconstruct_image(images, num_eigenface, mode, image_dim=[100, 100]):
     cv2.waitKey(0)
     # cv2.destroyAllWindows()
     return
+
+from PIL import Image
+import numpy as np
+import os
+
+
+def import_image_path(folder_dir):
+    """
+    Fetch path of all file in the folder directory
+    :param path: String folder path
+    :param img_indexes: 
+    :return: 
+    """""
+    return [os.path.join(folder_dir,f) for f in os.listdir(folder_dir)]
+
+
+def load_image(full_path):  # Importing single image
+    image = np.array(Image.open(full_path).convert('L'), 'float32')
+    [h, w] = np.shape(image)
+    image_vec = np.reshape(image, h * w, 'C')
+    return image_vec
+
+
+def preprocess(image_path_list):
+    # Load all image and subtract the value by the average value
+    img_amount = len(image_path_list)
+    image_vector = np.stack([load_image(image_path) for image_path in image_path_list])
+    image_average = np.tile(np.mean(image_vector, 0), (img_amount, 1)) / img_amount
+
+    image_vector = image_vector - image_average
+    # return the images list and average
+    return image_vector.T, image_average.T

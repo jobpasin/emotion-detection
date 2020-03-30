@@ -7,11 +7,12 @@ import os
 # original_dir = os.getcwd()
 # sys.path.append('/home/pi/.virtualenvs/cv/lib/python3.6/site-packages')  # For Raspberry Pi
 import timeit
+import random
 import numpy as np
 
 from PIL import Image
-from utils.eigenface import create_eigface
-from utils.data import *
+from utils.eigenface import *
+# from utils.data import import_image_path
 
 
 def import_images(paths, emotion, img_indexes=None, img_amount=None):
@@ -34,18 +35,17 @@ def import_images(paths, emotion, img_indexes=None, img_amount=None):
             image_path = [im_p for im_p in import_image_path(p) if im_p.split("_")[0].endswith(emotion)
                           and im_p.split("_")[1] in img_indexes]
         image_paths = image_paths + image_path
+
     image_paths.sort()
 
-    if img_amount is None:
-        img_amount = len(image_paths)
-    else:
+    # Randomly select
+    if img_amount is not None:
         assert img_amount <= len(image_paths), "Requested too many images. Amount of image found is {}.".format(
             len(image_paths))
+        image_paths = random.choice(image_paths)
 
     # Load all image and subtract the value by the average value
     im_vector, im_average = preprocess(image_paths)
-
-    # return the images list and average
     return im_vector, im_average
 
 
