@@ -6,7 +6,7 @@ import os
 
 # original_dir = os.getcwd()
 # sys.path.append('/home/pi/.virtualenvs/cv/lib/python3.6/site-packages')  # For Raspberry Pi
-import timeit
+import time
 import random
 import numpy as np
 
@@ -57,7 +57,7 @@ def load_image(full_path):  # Importing single image
 
 
 if __name__ == '__main__':
-    tic = timeit.default_timer()
+    tic = time.time()
 
     # Parameters
     precent_eig_param = [90.0, 90.0, 90.0, 90.0]  # Minimum of percentage of eigenvalue
@@ -67,14 +67,14 @@ if __name__ == '__main__':
     # img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
     #              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',
     #              '1118.jpg', '1123.jpg', '1126.jpg', '1129.jpg']
-    PCA_Path = './weights/train_debug.npz'  # Path to save PCA
-
+    weight_save_path = './weights/train_debug.npz'  # Path to save eigenface
 
     data = {'image_emotion': ['hap', 'sad', 'ang', 'sur'],
             'train_image': [], 'average_image': [],
             'eigenface.py': [], 'eigenvalue': []
             }
 
+    # Training process
     for i, emo in enumerate(data['image_emotion']):
         train_image, im_avg = import_images(train_dir, emo, img_index)  # Importing image
         eigface, eigval = create_eigface(train_image, num_eigen=None, percent_eigen=precent_eig_param[i])  # Calculate eigenface
@@ -84,17 +84,14 @@ if __name__ == '__main__':
         data['eigenvalue'].append(eigval)
 
     # Save to "PCATrain.npz"
-    File = open(PCA_Path, 'w+')
-    File.close()
-    np.savez(PCA_Path,
+    open(weight_save_path, 'w+').close()  # Create file if not exist
+    np.savez(weight_save_path,
              Eig0=data['eigenface.py'][0], ImAv0=data['average_image'][0],
              Eig1=data['eigenface.py'][1], ImAv1=data['average_image'][1],
              Eig2=data['eigenface.py'][2], ImAv2=data['average_image'][2],
              Eig3=data['eigenface.py'][3], ImAv3=data['average_image'][3])
 
-    toc = timeit.default_timer()
-
-    print("Total time spend for training is: {} seconds".format(toc - tic))
+    print("Total time spend for training is: {} seconds".format(time.time() - tic))
     print("Total images for training is {}, {}, {}, {} images (For each emotion)".format(
         np.shape(data['train_image'][0])[1], np.shape(data['train_image'][1])[1],
         np.shape(data['train_image'][2])[1], np.shape(data['train_image'][3])[1]))
