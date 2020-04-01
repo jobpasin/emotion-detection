@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from PIL import Image
+import os
 
 
 def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of creating optimal projection axis
@@ -55,14 +57,18 @@ def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of cr
     return eigenface, eig_value
 
 
+def preprocess_test(test_image, image_average):
+    return test_image - image_average
+
+
 def reconstruction_loss(test_image, eigenface, im_average):  # Process of testing
     # Number of eigenfaces, normalized image
-    test_image = np.reshape(test_image, np.shape(test_image)[0] * np.shape(test_image)[1], 'C').transpose()  # Vectorize
-    test_image = test_image - im_average  # Normalize with average of training data
+    # test_image = np.reshape(test_image, np.shape(test_image)[0] * np.shape(test_image)[1], 'C').transpose()  # Vectorize
+    test_image = preprocess_test(test_image, im_average)  # Normalize with average of training data
 
     # Create projection face from training eigenface.py
-    test_weight = eigenface.transpose() * test_image
-    projected_image = eigenface * test_weight  # Principle component of image using optimal projection
+    test_weight = np.matmul(eigenface.transpose(), test_image)
+    projected_image = np.matmul(eigenface, test_weight)  # Principle component of image using optimal projection
 
     # Calculate total euclidean distance
     error = np.linalg.norm(test_image - projected_image)
@@ -105,10 +111,6 @@ def reconstruct_image(images, num_eigenface, mode, image_dim=[100, 100]):
     # cv2.destroyAllWindows()
     return
 
-from PIL import Image
-import numpy as np
-import os
-
 
 def import_image_path(folder_dir):
     """
@@ -117,7 +119,7 @@ def import_image_path(folder_dir):
     :param img_indexes: 
     :return: 
     """""
-    return [os.path.join(folder_dir,f) for f in os.listdir(folder_dir)]
+    return [os.path.join(folder_dir, f) for f in os.listdir(folder_dir)]
 
 
 def load_image(full_path):  # Importing single image
@@ -127,12 +129,12 @@ def load_image(full_path):  # Importing single image
     return image_vec
 
 
-def preprocess(image_path_list):
+def preprocess_train(image_path_list):
     # Load all image and subtract the value by the average value
     img_amount = len(image_path_list)
     image_vector = np.stack([load_image(image_path) for image_path in image_path_list])
-    image_average = np.tile(np.mean(image_vector, 0), (img_amount, 1)) / img_amount
+    image_average = np.mean(image_vector, 0) / img_amount
 
-    image_vector = image_vector - image_average
+    image_vector = image_vector - np.tile(image_average, (img_amount, 1))
     # return the images list and average
     return image_vector.T, image_average.T

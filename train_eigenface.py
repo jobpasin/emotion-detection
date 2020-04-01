@@ -45,7 +45,7 @@ def import_images(paths, emotion, img_indexes=None, img_amount=None):
         image_paths = random.choice(image_paths)
 
     # Load all image and subtract the value by the average value
-    im_vector, im_average = preprocess(image_paths)
+    im_vector, im_average = preprocess_train(image_paths)
     return im_vector, im_average
 
 
@@ -101,8 +101,6 @@ if __name__ == '__main__':
     print("Image size is {} features".format(np.shape(data['train_image'][0])[0]))
     print("Number of optimal projection axis is:", np.shape(data['eigenface.py'][0])[1])
 
-    # TODO: Add validation part in here instead of 1DPCA_Validation
-    # TODO: Fix test part
 '''
 # Perform the tranining
 recognizer.train(images, np.array(labels))
