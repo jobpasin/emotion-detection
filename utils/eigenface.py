@@ -2,38 +2,39 @@ import cv2
 import numpy as np
 from PIL import Image
 import os
-
+from sklearn.preprocessing import normalize
 
 def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of creating optimal projection axis
     """
     Function to create eigenface.py (Using Principal Component Analysis with some extra technique to save computation cost)
-    :param images           : ndarray of size (features, num_image)
+    :param images           : ndarray of size (features, num_image), (N^2, M)
     :param num_eigen        : int, number of eigenfaces. Cannot be specified with percent_eigen
     :param percent_eigen    : float, number of percentage of eigenvalues for determine number of eigenface.py
 
     """
+    features, num_pic = np.shape(images)
     if num_eigen is not None and percent_eigen is not None:
         raise ValueError("Only one of 'num_eigen' or 'percent_eigen' can be specified")
     if num_eigen is None and percent_eigen is None:
-        raise ValueError("Either 'num_eigen' or 'percent_eigen' need to be specified")
+        num_eigen = num_pic  # Use number of eigenvector as number of images
 
-    features, num_pic = np.shape(images)
     # Create pseudo covariance matrix. This case will have matrix size [num_pic, num_pic]
     # which can be much smaller than standard approach where cov matrix will be [features, features]
-    cov = np.matmul(images.transpose(), images)
+    cov = np.matmul(images.transpose(), images)  # (M,M)
 
     # Compute Eigenvalue and Eigenvector
-    eig_value, eig_vector_temp = np.linalg.eig(cov)
+    eig_value, eig_vector_temp = np.linalg.eig(cov)  # eigenvector v_i (M features)
 
     # Find true eigenvector
-    eig_vector = np.matmul(images, eig_vector_temp)  # Convert vector back since we do transpose of normal cov matrix
+    eig_vector = np.matmul(images, eig_vector_temp)  # Convert to u_i = A*v_i (N^2 features)
+    eig_vector = normalize(eig_vector, norm='l2', axis=0)  # Normalize so |u| = 1
 
-    # Sort eigenvalue and correspond eigenvector by descending
+    # Sort eigenvalue and correspond eigenvector in descending order
     index = eig_value.argsort()[::-1]
     eig_value = eig_value[index]
     eig_vector = eig_vector[:, index]
 
-    if percent_eigen is not None:  # percent_eigen mode
+    if percent_eigen is not None:  # Select number of eigenvector based on percentage of eigenvalue
         assert 0 < percent_eigen < 100, "percent_eigen need to be between 0 to 100"
         # Calculate amount of eigenfaces by select the minimum amount that has total eigenvalues higher than threshold
         sum_eigenvalue = np.sum(eig_value, dtype='float32')
@@ -42,16 +43,13 @@ def create_eigface(images, num_eigen=None, percent_eigen=None):  # Process of cr
                 num_eigen = i
                 print("Using {} eigenfaces".format(num_eigen))
                 break
-    else:  # num_eigen mode
+    else:  # Select number of eigenvector based on input directly
         if num_pic < num_eigen:
             num_eigen = num_pic
-            print("Warning: Eigenfaces is limited to no more than the number of training images")
+            print("Warning: Number of eigenfaces is limited to no more than the number of training images")
 
     # Fetch a selected number of eigenface.py and eigenvalue
     eigenface = eig_vector[:, 0:num_eigen]
-
-    # Select only num_Eig vectors and normalize to size of 1
-    # eigenface.py = eig_vector/eig_vector.sum(axis=0,keepdims=1)  # Unused
 
     # return optimal projection axis and average image for future use
     return eigenface, eig_value
@@ -133,8 +131,17 @@ def preprocess_train(image_path_list):
     # Load all image and subtract the value by the average value
     img_amount = len(image_path_list)
     image_vector = np.stack([load_image(image_path) for image_path in image_path_list])
-    image_average = np.mean(image_vector, 0) / img_amount
+    image_average = np.mean(image_vector, 0)
 
     image_vector = image_vector - np.tile(image_average, (img_amount, 1))
     # return the images list and average
-    return image_vector.T, image_average.T
+    return np.transpose(image_vector), np.transpose(image_average)
+
+
+if __name__ == "__main__":
+    image = np.array([[1, 2, 3], [4, 5, 6], [9, 8, 7], [12, 11, 10]])
+    image_average = np.mean(image, 0)
+    image = image - np.tile(image_average, (4, 1))
+    print("Image of {} features and {} images".format(np.shape(image)[0], np.shape(image)[1]))
+    eigenface, eigenvalue = create_eigface(image)
+    print("Finish)")

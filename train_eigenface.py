@@ -19,7 +19,7 @@ def import_images(paths, emotion, img_indexes=None, img_amount=None):
     """
     Fetch list of images directory of specific emotion. Specifically work for our file format.
     :param paths:       String, folder directory where images are stored. Can be list to fetch from multiple folders.
-    :param emotion:     String of emotion name. Image name should start with emotion e.g. sad_1010.jpg
+    :param emotion:     String of 'emotion' name. Image name in the folder should start with 'emotion' e.g. sad_1010.jpg
     :param img_indexes: List of string of specific image id you want e.g. [1010.jpg]. If None, will fetch all
     :param img_amount:  Amount of image you want to fetch. Use None to fetch all
     :return:            ndarray of size (h*w, img_amount) or (features, num_image)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     # img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
     #              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',
     #              '1118.jpg', '1123.jpg', '1126.jpg', '1129.jpg']
-    weight_save_path = './weights/train_debug.npz'  # Path to save eigenface
+    weight_save_path = './weights/trained_eigenface.npz'  # Path to save eigenface
 
     data = {'image_emotion': ['hap', 'sad', 'ang', 'sur'],
             'train_image': [], 'average_image': [],
