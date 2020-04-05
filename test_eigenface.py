@@ -27,7 +27,6 @@ def detect_emotion(test_image_folder, eigenface_path):
             test_image_path.append(p)
     except ValueError:
         print("Warning: {} is not in list. Full filename: {}".format(os.path.basename(p).split('_')[0], p))
-
     for im_path in test_image_path:
         test_data = load_image(im_path)
         data_loss = []
@@ -58,7 +57,7 @@ def load_eigenface(eigenface_path):
 
 if __name__ == "__main__":
     test_folder = "./TestingPics"
-    eigenface_path = "./weights/train_debug.npz"
+    eigenface_path = "./weights/trained_eigenface.npz"
 
     ground_truth, prediction = detect_emotion(test_folder, eigenface_path)
     precision = get_metrics(ground_truth, prediction)

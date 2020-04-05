@@ -59,52 +59,47 @@ def preprocess_test(test_image, image_average):
     return test_image - image_average
 
 
-def reconstruction_loss(test_image, eigenface, im_average):  # Process of testing
+def reconstruction_loss(test_im, eigenface, im_average):  # Process of testing
     # Number of eigenfaces, normalized image
     # test_image = np.reshape(test_image, np.shape(test_image)[0] * np.shape(test_image)[1], 'C').transpose()  # Vectorize
-    test_image = preprocess_test(test_image, im_average)  # Normalize with average of training data
+    test_im = preprocess_test(test_im, im_average)  # Normalize with average of training data
 
     # Create projection face from training eigenface.py
-    test_weight = np.matmul(eigenface.transpose(), test_image)
-    projected_image = np.matmul(eigenface, test_weight)  # Principle component of image using optimal projection
+    image_weight = np.matmul(eigenface.transpose(), test_im)
+    projected_image = np.matmul(eigenface, image_weight)  # Principle component of image using optimal projection
 
     # Calculate total euclidean distance
-    error = np.linalg.norm(test_image - projected_image)
+    error = np.linalg.norm(test_im - projected_image)
     return error
 
 
-def reconstruct_image(images, num_eigenface, mode, image_dim=[100, 100]):
+def visualize_eigenface(eigenface, eigenface_index, mode="default", image_dim=[100, 100]):
     """
-    Transform the eigenface.py into an image and display with openCV for visualization
-    :param images           : ndarray of image or eigenface.py with dimension
-    :param num_eigenface    : int, amount of eigenface.py to visualize
-    :param mode             : string. Type of image of the following option. Case-insensitive.
-                            :'eig' or 'eig_inv' for eigenface.py of size [features, num_eigenface]
-                            :'eig_inv' will give the inverted image instead
-                            :'normal_im' for vectorized image of size [features]
+    Transform the eigenface into an image and display with openCV for visualization
+    :param images           : ndarray of image or eigenface with dimension
+    :param eigenface_index    : int, the index of eigenfaces used to visualize
+    :param mode             : string. Type of image of the following option.
+                            :'default' will visualize eigenface of size [features, num_eigenface]
+                            :'inverse' will give the inverted image instead
+                            :'raw' for vectorized image of size [features]
     """
     # Return eigenface.py into image
-    # reconstruct_image(eigenface.py[0],0,'eig') or reconstruct_image(eig_value[0],0,'normal_im')
+    # reconstruct_image(eigenface[0],0,'eig') or reconstruct_image(eig_value[0],0,'normal_im')
     mode = mode.lower()
-    mode_option = ['eig', 'eig_inv', 'normal_im']
+    mode_option = ['default', 'inverse', 'raw']
     assert mode in mode_option, "Mode need to be one of the following: {}".format(mode_option)
-    if mode == "eig":
-        eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
-        eigen_image = eigen_image - np.min(eigen_image)
-        eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
-    elif mode == "eig_inv":
-        eigen_image = np.reshape(images[:, num_eigenface], (image_dim[0], image_dim[1]))
-        eigen_image = -eigen_image
-        eigen_image = eigen_image - np.matrix.min(eigen_image)
-        eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
-    elif mode == "normal_im":
-        eigen_image = np.reshape(images, (image_dim[0], image_dim[1]))
+    if mode == "raw":
+        eigen_image = np.reshape(eigenface, (image_dim[0], image_dim[1]))
         eigen_image = np.array(eigen_image, dtype=np.uint8)
     else:
-        print("Error mode : 'E' or 'Av'")
-    im = cv2.resize(eigen_image, (400, 400))
-    cv2.imshow("Eigenface Image: " + str(num_eigenface), im)
+        eigen_image = np.reshape(eigenface[:, eigenface_index], (image_dim[0], image_dim[1]))
+        if mode == "inverse":
+            eigen_image = -eigen_image
+        eigen_image = eigen_image - np.matrix.min(eigen_image)
+        eigen_image = np.array(eigen_image / np.max(eigen_image) * 255, dtype=np.uint8)
 
+    im = cv2.resize(eigen_image, (400, 400))
+    cv2.imshow("Eigenface Image: " + str(eigenface_index), im)
     cv2.waitKey(0)
     # cv2.destroyAllWindows()
     return
