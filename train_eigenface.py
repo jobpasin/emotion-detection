@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # Parameters
     precent_eig_param = [90.0, 90.0, 90.0, 90.0]  # Minimum of percentage of eigenvalue
     num_eig_param = None  # Number of Eig
-    train_dir = './TrainingPicsAll'  # Training pictures path
+    train_dir = './dataset/face_dataset_train'  # Training pictures path
     img_index = []
     # img_index = ['1008.jpg', '1011.jpg', '1014.jpg', '1015.jpg', '1022.jpg', '1025.jpg',
     #              '1027.jpg', '1028.jpg', '1031.jpg', '1032.jpg', '1033.jpg', '1117.jpg',

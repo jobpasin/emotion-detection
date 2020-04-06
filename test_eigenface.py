@@ -56,7 +56,7 @@ def load_eigenface(eigenface_path):
 
 
 if __name__ == "__main__":
-    test_folder = "./TestingPics"
+    test_folder = "./dataset/face_dataset_test"
     eigenface_path = "./weights/trained_eigenface.npz"
 
     ground_truth, prediction = detect_emotion(test_folder, eigenface_path)
